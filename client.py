@@ -1,4 +1,5 @@
 import socket
+import os
 s=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 host=str(input("Enter the Private Ip of server\n"))
 if not host:
@@ -15,6 +16,7 @@ while True:
         name=str(input("Enter your name:\n"))
 s.sendall(name.encode('utf-8'))
 name_r=s.recv(100).decode().strip()
+os.system("cls")
 while True:
     i=str(input(name+" : "))
     i=i.encode('utf-8')
@@ -23,6 +25,7 @@ while True:
         print("You have closed the chat\n")
         s.close()
         break
+    
     r=s.recv(5000)
     r=r.decode().strip()
     if not r:
@@ -34,4 +37,8 @@ while True:
     else:
         print(name_r," : ",r,'\n')
 
+
+
+    
+    
         
