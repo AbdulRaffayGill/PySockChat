@@ -19,6 +19,10 @@ while True:
     i=str(input(name+" : "))
     i=i.encode('utf-8')
     send=s.sendall(i)
+    if i==";":
+        print("You have closed the chat\n")
+        s.close()
+        break
     r=s.recv(5000)
     r=r.decode().strip()
     if not r:
@@ -29,11 +33,5 @@ while True:
         break
     else:
         print(name_r," : ",r,'\n')
-    i=str(input(name+" : "))
-    i=i.encode('utf-8')
-    send=s.sendall(i)
-    if i==";":
-        print("You have closed the chat\n")
-        s.close()
-        break
+
         
