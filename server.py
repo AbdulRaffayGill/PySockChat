@@ -16,7 +16,7 @@ def peer_chat():
         if name not in arr:
             break
         else:
-            print("Only special chracters not allowed\n")
+            print("Single special chracters not allowed\n")
             name=str(input("Enter your name:\n"))
     b.sendall(name.encode('utf-8'))
     os.system("cls")
@@ -39,29 +39,25 @@ def peer_chat():
             break
 def client_soc(client,i,m):
     while True:
-        r=client[i][0].recv(5000).decode().strip()
-        if not r:
+        r=client[i][0].recv(5100).decode().strip()
+        if not r.strip(client[i][1]+":"):
             print(client[i][1]," : ","(Empty message received)\n")
-        elif r==';':
-            print("Chat ended by the other person:\nQuitting\n")
+        elif r.strip(client[i][1]+":")==';':
+            print(client[i][1]," left the chat")
             client[i][0].close()
             break
         else:
-            print(client[i][1]," : ",r,'\n')
-            for i in range(0,m):
-                client[i][0].sendall("\n"+r)
-        h=str(input(client[i][2] +" : ")).encode('utf-8')
-        send=client[i][0].sendall(h)
-        if h.decode()==";":
-            print("You have closed the chat\n")
-            client[i][0].close()
-            break
+            print(r,'\n')
+            for j in range(0,m):
+                client[j][0].sendall(("\n"+r).encode('utf-8'))
+                
+            
 def GroupChat():
     s=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
     host=socket.gethostname()
     s.bind((host,5000))
     print("Server listening for Group Chat connections\n")
-    s.listen(5)
+    s.listen(10)
     clients=[]
     arr=['/','*',':',';','!','@','#','$','%','^','&','?','|','\\']
     name_me=str(input("Enter your name:\n"))
@@ -69,14 +65,17 @@ def GroupChat():
         if name_me not in arr:
             break
         else:
-            print("Only special chracters not allowed\n")
+            print("Single special chracters not allowed\n")
             name_me=str(input("Enter your name:\n"))
-    m=int(input("Enter the number of clients that are allowed to connect:\n(Max allowed 5)"))
+    m=int(input("Enter the number of clients that are allowed to connect:\n(Max allowed 10)"))
     for i in range(0,m):
         soc,l=s.accept()
         name=soc.recv(100).decode().strip()
         soc.sendall(name_me.encode('utf-8'))
         clients.append((soc,name,name_me))
+        print("Client ",i,"'"+name+"'"," entered the Chat")
+       # for j in range(0,i):
+          #  clients[j][0].sendall(("\nClient "+i+"'"+name+"' entered the Chat").encode('utf-8'))
     for i in range(0,m):
         threading.Thread(target=client_soc,args=(clients,i,m)).start()    
 
