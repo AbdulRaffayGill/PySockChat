@@ -37,20 +37,24 @@ def peer_chat():
             print("You have closed the chat\n")
             s.close()
             break
-def client_soc(client,i,m):
-    while True:
+def client_soc(client,i,m,stop_event):
+    while not stop_event.is_set():
         r=client[i][0].recv(5100).decode().strip()
         if not r.strip(client[i][1]+":"):
             print(client[i][1]," : ","(Empty message received)\n")
         elif r.strip(client[i][1]+":")==';':
-            print(client[i][1]," left the chat")
-            client[i][0].close()
+            stop_event.set()
             break
         else:
             print(r,'\n')
             for j in range(0,m):
-                client[j][0].sendall(("\n"+r).encode('utf-8'))
-                
+                if(client[i][0]!=client[j][0]):
+                    client[j][0].sendall(("\n"+r).encode('utf-8'))
+    if(stop_event.is_set()):
+        print(client[i][1]," left the chat")
+        client[i][0].stop()
+        client[i][0].join()
+                 
             
 def GroupChat():
     s=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
@@ -77,7 +81,8 @@ def GroupChat():
        # for j in range(0,i):
           #  clients[j][0].sendall(("\nClient "+i+"'"+name+"' entered the Chat").encode('utf-8'))
     for i in range(0,m):
-        threading.Thread(target=client_soc,args=(clients,i,m)).start()    
+        stop_event=threading.Event()
+        threading.Thread(target=client_soc,args=(clients,i,m,stop_event)).start()    
 
         
 while True:

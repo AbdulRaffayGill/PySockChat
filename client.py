@@ -39,7 +39,7 @@ def recv():
             s.close()
             break
         else:
-            print('\n',r,'\n')
+            print('\n',r)
 threading.Thread(target=recv).start()            
 threading.Thread(target=send).start()
 
