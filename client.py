@@ -11,7 +11,7 @@ def safe_print(msg):
 def send_auth_request(ip, message):
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect((ip, 6001)) # Connect to Auth Port
+        s.connect((ip, 6001)) 
         s.sendall(message.encode('utf-8'))
         response = s.recv(1024).decode().strip()
         s.close()
@@ -144,8 +144,8 @@ def Group(server_ip, logged_in_user):
     os.system("cls")
     def send():
         while True:
-            with lock:
-                i=str(input(name+" : "))
+            
+            i=str(input(name+" : "))
             if i==";":
                 safe_print("You have closed the chat\n")
                 s.close()
@@ -214,7 +214,7 @@ def group_chat_controller():
                 input("Press Enter to continue...")
                 
             elif dash_choice == "3":
-                # Logout logic
+                
                 send_auth_request(server_ip, f"LOGOUT|{current_user}")
                 print("Logging out...")
                 time.sleep(1)
