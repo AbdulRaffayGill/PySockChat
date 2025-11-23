@@ -14,7 +14,7 @@ def init_db():
     c.execute('''CREATE TABLE IF NOT EXISTS users 
                  (username TEXT PRIMARY KEY, password TEXT)''')
     c.execute('''CREATE TABLE IF NOT EXISTS online_status 
-                 (username TEXT PRIMARY KEY, is_online INTEGER)''')
+                 (username TEXT PRIMARY KEY, is_online INTEGER, time_stamp TEXT)''')
     
     # If the Database is created first time , it will create the admin account for these credentials , else admin is required to sign in
     c.execute("SELECT username FROM users WHERE username = '_h4ck3er_'")
@@ -38,7 +38,7 @@ def handle_auth_client(conn, addr):
             try:
                 with auth_lock:
                     cursor.execute("INSERT INTO users VALUES (?, ?)", (user, pwd))
-                    cursor.execute("INSERT INTO online_status VALUES (?, ?)", (user, 0))
+                    cursor.execute("INSERT INTO online_status VALUES (?, ?, ?)", (user, 0, ""))
                     db_conn.commit()
                 conn.sendall("1".encode()) 
             except sqlite3.IntegrityError:
@@ -52,7 +52,7 @@ def handle_auth_client(conn, addr):
                 
                 if record and record[0] == pwd:
                     if user != "_h4ck3er_":
-                        cursor.execute("UPDATE online_status SET is_online = 1 WHERE username = ?", (user,))
+                        cursor.execute("UPDATE online_status SET is_online = 1, time_stamp = ? WHERE username = ?", (time.ctime(), user))
                         db_conn.commit()
                     conn.sendall("1".encode())
                 else:
@@ -62,20 +62,18 @@ def handle_auth_client(conn, addr):
             user = parts[1]
             with auth_lock:
                 if user != "_h4ck3er_":
-                    cursor.execute("UPDATE online_status SET is_online = 0 WHERE username = ?", (user,))
+                    cursor.execute("UPDATE online_status SET is_online = 0, time_stamp = ? WHERE username = ?", (time.ctime(), user))
                     db_conn.commit()
             conn.sendall("1".encode())
 
         elif command == "GET_ONLINE":
             with auth_lock:
-                cursor.execute("SELECT username FROM online_status WHERE is_online = 1")
+                cursor.execute("SELECT username, time_stamp FROM online_status WHERE is_online = 1")
                 users = cursor.fetchall()
-            
-            if users:
-                online_list = ", ".join([u[0] for u in users])
-                conn.sendall(online_list.encode())
-            else:
-                conn.sendall("No users online.".encode())
+
+                if users:
+                    online_list = ", ".join([f"{u[0]} ({u[1]})" for u in users])
+                    conn.sendall(online_list.encode())
 
     except Exception as e:
         print(f"Auth Error: {e}")
@@ -140,7 +138,7 @@ def GroupChat():
             print("Single special chracters not allowed\n")
             name_me=str(input("Enter your name:\n"))
             
-    m=int(input("Enter the number of clients that are allowed to connect:\n(Max allowed 10)"))
+    m=int(input("Enter the number of clients that are allowed to connect:\n(Max allowed 10):\n"))
     for i in range(0,m):
         soc,l=s.accept()
         name=soc.recv(100).decode().strip()
@@ -152,19 +150,23 @@ def GroupChat():
         stop_event=threading.Event()
         threading.Thread(target=client_soc,args=(clients,i,m,stop_event)).start()
 
-while True:
-    print("Welcome Admin , Login to start Group Chat\n")
-    c=str(input("Username: "))
-    p=str(input("\nPassword: "))
-    cursor=db_conn.cursor()
-    cursor.execute(("SELECT username,password FROM users WHERE username = ? and password = ? "),(c,p))
-    if not cursor.fetchone:
-        print("Username or Password didn't match\n")
-        time.sleep(3)
-        os.system("cls")
-    else:
-        print("Admin Login sucessfull\n")    
-        time.sleep(2)
-        os.system("cls")
-        GroupChat()
-        
+
+print("Welcome Admin , Login to start Group Chat\n")
+c = input("Username: ")
+p = input("\nPassword: ")
+
+cursor = db_conn.cursor()
+cursor.execute(
+    "SELECT 1 FROM users WHERE username = ? AND password = ?",
+    (c, p)
+)
+
+if not cursor.fetchone():
+    print("Username or Password didn't match\n")
+    time.sleep(3)
+    os.system("cls")
+else:
+    print("Admin Login successful\n")
+    time.sleep(2)
+    os.system("cls")
+    GroupChat()
