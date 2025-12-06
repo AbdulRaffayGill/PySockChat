@@ -82,9 +82,8 @@ def handle_auth_client(conn, addr):
 
 def start_auth_server():
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.bind(('0.0.0.0', 6001)) # Auth Port
+    s.bind(('0.0.0.0', 6001))
     s.listen(5)
-    print("Auth Server running on port 6001...")
     while True:
         conn, addr = s.accept()
         t = threading.Thread(target=handle_auth_client, args=(conn, addr))
